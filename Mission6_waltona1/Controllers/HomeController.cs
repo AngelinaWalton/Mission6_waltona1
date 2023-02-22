@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mission6_waltona1.Models;
 using System;
@@ -11,14 +12,12 @@ namespace Mission6_waltona1.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private MovieFormContext blahContext { get; set; }
+        private MovieFormContext maContext { get; set; }
 
         // Constructor
-        public HomeController(ILogger<HomeController> logger, MovieFormContext someName)
+        public HomeController(MovieFormContext someName)
         {
-            _logger = logger;
-            blahContext = someName;
+            maContext = someName;
         }
 
         public IActionResult Index()
@@ -29,7 +28,11 @@ namespace Mission6_waltona1.Controllers
         [HttpGet]
         public IActionResult MovieForm()
         {
+            ViewBag.Categories = maContext.Categories.ToList();
+
             return View("MovieForm");
+            //return View(new FormResponse());
+            //maybe new FormResponse
         }
 
         [HttpPost]
@@ -37,24 +40,61 @@ namespace Mission6_waltona1.Controllers
         {
             if(ModelState.IsValid)
             {
-                blahContext.Add(response);
-                blahContext.SaveChanges();
+                maContext.Add(response);
+                maContext.SaveChanges();
                 return View("Confirmation", response);
             }
             else
             {
-                return View();
+                ViewBag.Categories = maContext.Categories.ToList();
+
+                return View(response);
             }
         }
         public IActionResult MyPodcasts()
         {
             return View("MyPodcasts");
         }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpGet]
+        public IActionResult WaitList ()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var applications = maContext.Responses
+                .Include(x => x.category)
+                .ToList();
+
+            return View(applications);
+        }
+        [HttpGet]
+        public IActionResult Edit(int formid)
+        {
+            ViewBag.Categories = maContext.Categories.ToList();
+
+            var Form = maContext.Responses.Single(x => x.FormId == formid);
+
+            return View("MovieForm", Form);
+        }
+        [HttpPost]
+        public IActionResult Edit(FormResponse fr)
+        {
+
+            maContext.Update(fr);
+            maContext.SaveChanges();
+
+            return RedirectToAction("WaitList");
+        }
+        [HttpGet]
+        public IActionResult Delete(int formid)
+        {
+            var Form = maContext.Responses.Single(x => x.FormId == formid);
+
+            return View(Form);
+        }
+        [HttpPost]
+        public IActionResult Delete(FormResponse fr)
+        {
+            maContext.Responses.Remove(fr);
+            maContext.SaveChanges();
+            return RedirectToAction("WaitList");
         }
     }
 }
