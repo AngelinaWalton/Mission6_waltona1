@@ -28,6 +28,7 @@ namespace Mission6_waltona1.Models
         public string notes { get; set; }
 
         // Build foreign key relationships
+        [Required(ErrorMessage = "Don't Forget to add the Category!")]
         public int? CategoryId { get; set; }
         public Category category { get; set; }
 

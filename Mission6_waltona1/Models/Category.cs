@@ -11,7 +11,6 @@ namespace Mission6_waltona1.Models
         [Required]
         [Key]
         public int CategoryId { get; set; }
-
         public string CategoryName { get; set; }
     }
 }
